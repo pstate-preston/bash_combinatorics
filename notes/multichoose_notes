@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# multichoose n k
+# This script computes the number of combinations of a chosen number of elements from a set, allowing for repeated choices.
+# With factorial and multichoose being functionally defined shell scripts, we can employ these two functions after defining a help flag and input checks.
+# Due to previously defined scripts, this one is relatively straightforward.
+
+# In terms of mathematics, this is the Multinomial Coefficient, denoted (n-1,k)!
+# idea: -You have n gallons of icecream. How many combinations of k scoops can you have, if you are allowed to draw from the same flavor more than once?-
+
+# Multichoose(n,k) = (n+k-1)_C_(k) = (n+k-1)!/(n-1)!
+# So, using previously designed shell scripts, $(multichoose n k) is the same as $( nchoosek $( factorial $((n+k-1)) ) $( factorial $(( n-1 )) ) )
+# in human readable terms, this is: nchoosek (n+k-1)! (n-1)!
+
+multichoose() {
+
+local n=$1
+local k=$2
+
+#Define help flag
+	if [[ "$n" == "-h" || "$n" == "--help" ]]; then
+		printf "This function computes the number of combinations of a chosen number of elements(k) from a set(n), allowing for repeated choices.\n Usage: multichoose [n] [k]\n"
+		exit 0
+	fi
+
+#Check to see if entries are null
+	if [[ -z $n || -z $k ]]; then
+		printf "Error: function needs two arguments\nTry including -h or --h flags for usage\n\n" >&2
+		return 1
+	fi
+
+#Regex check (are entries non-zero integers?)
+	if [[ ! "$n" =~ ^[0-9]+$ || ! "$k" =~ ^[0-9]+$ ]]; then
+		printf "Error: entries must be non-negative integers\n\n" >&2
+		return 1
+	fi
+
+#k must be less than n.
+	if (( k > n )); then
+		printf "Error: total elements(n) must be greater than chosen number of combinational elements(k)\n\n" >&2
+		return 1
+	fi
+
+#Compute solution (M) using: (n+k-1)!/(n-1)!
+#Shouldn't need to pass anything to bc, since factorial and nchoosek scripts already use bc to handle their numbers
+local fnum=$( factorial $(( n+k-1 )) )
+local fden=$( factorial $(( n-1 )) )
+local M=$( nchoosek $fnum $fden )
+
+echo "$M"
+}
+
+multichoose $1 $2

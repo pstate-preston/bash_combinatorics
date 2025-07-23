@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# permute_m [n] [# of repeating elements 1...] [# of repeating elements 2...] [# of repeating elements ...n]
+# see notes/permute_m_notes for more details
+
+# PermuteM(n, 1, 2,... ,m) = n!/(m1!m2!m3!....mn!) , where m is the number of times the element repeats in the set, and n is the cardinality of the set
+# example: set A := [1, 2, 2, 2, 3, 4, 4, 5]
+#	   PermuteM(8, 1, 3, 1, 2, 1) = 8!/(1!*3!*1!*2!*1!)
+
+permute_m(){
+
+# Defining n as the first argument, then shifting arguments to only include repeats.
+
+	local n="$1"
+	shift
+	local repeats=("$@")
+
+# Define help flag
+	if [[ "$n" == "-h" || "$n" == "--help" ]]; then
+		printf "This function computes the number of permutations of a multiset. \nUsage: permute_m [n] [# of repeating elements 1...] [# of repeating elements 2...] [# of repeating elements ...n]\n"
+		printf "Where n is the cardinality of the set, and the remaining arguments are the count of each repeating elements."
+		printf " Non-repeating elements can be ignored.\n\n"
+		exit 0
+	fi
+
+# Check for null arguments.
+	if [[ -z "$n" || (( ${#repeats[@]} == 0 )) ]]; then
+		printf "Error: function needs at least two arguments.\nTry including -h or --help flags for usage.\n\n" >&2
+		return 1
+	fi
+
+# Ensure all entries are non-negative integers and acquire sum of repeating entries
+	if [[ ! "$n" =~ ^[0-9]+$ ]]; then
+		printf "Error: cardinality[n] of the set must be a non-negative integer\n\n" >&2
+		return 1
+	fi
+
+	local sum=0
+	for count in "${repeats[@]}"; do
+		if [[ ! "$count" =~ ^[0-9]+$ ]]; then
+			printf "Error: number repeated elements[m] must be non-negative integers.\n\n"
+			return 1
+		fi
+		sum=$(( sum + count ))
+	done
+
+# Following the definition of n, all other entries must be smaller than n
+	if (( n < sum )); then
+		printf "Error: the cardinality of the set must be larger than the number of elements in the set.\nTry including -h or --help flags for usage.\n\n" >&2
+		return 1
+	fi
+
+# Define mathematical operations
+	denominator=1
+	for count in "${repeats[@]}"; do
+		f=$(factorial "$count")
+		denominator=$( echo "$denominator * $f" | bc )
+	done
+
+	numerator=$(factorial "$n")
+
+	solution=$( echo "scale=0; $numerator/$denominator" | bc )
+
+# Check to make sure nothing went wrong, then output solution
+	if [[ -z $solution || $solution == "?" ]]; then
+		printf "Error: failed to compute\n\n" >&2
+		return 1
+	fi
+
+
+	echo "$solution"
+
+}
+
+# Pass all arguments given to the script into the function created above
+permute_m "$@"

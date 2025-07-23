@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# permute_r n r
+# This script computes the number of permutations of r choices from a set n, allowing for repeated choices.
+# Just like listing all of the possible permutations of the binary set for given indices. For instance, the number of binary permutation using four indices is 2^4 = 16 (the numbers 0-15).
+# Considering that any element of the set can be chosen from any number of times, the size of r is not restricted as it is in nchoosek and permute. 
+# However, for this script, factorial nor any other user created utilities can be used. This means the computation of n^r must be computed locally and passed to bc.
+
+# In mathematics, this is denoted as Prep(n,r). It is referred as permutation from a set with repeating choices, not to be confused with a multiset, which can actually contain repeated elements.
+# Idea: what are all the possible 4-digit pin numbers that can be drawn from the set 0-9?
+
+# Prep(n,r) = n^r
+
+
+
+permute_r() {
+
+local n="$1"
+local r="$2"
+
+
+#define help flag
+	if [[ "$n" == "-h" || "$n" == "--help" ]]; then
+		printf "This functions computes the number of permutations of r choices from a set of length n, allowing for repeated choice.\n Usage: permute_r [n] [r]\n"
+		exit 0
+	fi
+
+#check for null entries
+	if [[ -z "$n" || -z "$r" ]]; then
+		printf "Error: function needs two arguments.\nTry including -h or --help flags for usage\n\n" >&2
+		return 1
+	fi
+
+#regex check
+	if [[ ! "$n" =~ ^[0-9]+$ || ! "$r" =~ ^[0-9]+$ ]]; then
+		printf "Error: entries must be non-negative integers\n\n" >&2
+		return 1
+	fi
+
+#compute solution
+
+local solution=$(echo "$n ^ $r" | bc)
+
+echo "$solution"
+}
+
+permute_r $1 $2

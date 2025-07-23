@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# nchoosek n k
+# see notes/nchoosek_notes for more details
+
+# nCk = n!/(k!*(n-k)!)
+# n := total number of elements in a set
+# k := number of indices to compute combinations
+
+
+nchoosek() {
+
+	local n="$1"
+	local k="$2"
+	local null="$3"
+
+
+#define help flag
+	if [[ $1 == "-h" || $1 == "--help" ]]; then
+		printf "This function computes the number of combinations possible of a chosen number of elements(k) from a set of elements(n)\nUsage: nchoosek [n] [k]\n\n"
+		exit 0
+	fi
+
+
+#function needs two arguments, must be entered in the format nchoosek n k
+	if [[ -z "$n" || -z "$k" ]]; then
+		printf "Error: function needs two arguments\nTry including -h or --help flags for usage\n\n" >&2
+		return 1
+	fi
+
+#check that exactly two arguments have been entered
+	if [[ ! -z "$null" ]]; then
+		printf "Error: function cannot take more than two entries.\nTry -h or --help flags for usage.\n\n" >&2
+		return 1
+	fi
+
+# if n or r are entries that consist of anything other than integeers 0-9, throw error
+	if [[ ! $n =~ ^[0-9]+$ || ! $k =~ ^[0-9]+$ ]]; then
+		printf "Error: entries must be non-negative integers\n\n" >&2
+		return 1
+	fi
+
+
+# number of elements chosen must be less than or equal to number of total elements
+	if (( n < k )); then
+		printf "Error: choice of combinational elements(k) must be less than or equal to total number of elements(n)\n\n" >&2
+		return 1
+	fi
+
+
+# compute solution(C)
+	local fn=$(factorial $n)
+	local fk=$(factorial $k)
+	local fnminusk=$(factorial $(( n-k )))
+	local C=$(echo "scale=0;
+				$fn/($fk*$fnminusk)" | bc)
+
+
+# check to make sure nothing went wrong, then output solution
+	if [[ -z "$C" || "$C" == "?" ]]; then
+		printf "Error: failed to compute\n\n" >&2
+		return 1
+	fi
+
+	printf "%s\n" "$C"
+}
+
+nchoosek "$1" "$2" "$3"

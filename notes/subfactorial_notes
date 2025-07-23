@@ -1,0 +1,84 @@
+#!/bin/bash
+
+# subfactorial [n]
+# script to cleanly compute subfactorial of large numbers to be used in other scripts or as a standalone function
+# including -h and --help to decribe usage.
+
+# Mathematically, subfactorial is the number of permutations of a set of elements where no element maintains its original position.
+# A permuation where no elements maintain their original position is called a derangement. Subfactorial counts the number of derangements for a set of elements.
+# denoted !n
+
+# below is the recursive definition of subfactorial
+# n! = (n-1)*( !(n-2) + !(n-2) )
+# n:= the number of elements in a set
+# note that !0 = 1, and !1 = 0
+
+
+subfactorial() {
+
+	local n="$1"
+	local null="$2"
+
+	#define help flag
+	if [[ "$n" == "-h" || "$n" == "--help" ]]; then
+		printf "Usage: subfactorial [non-negative integer]\n"
+		return 1
+	fi
+
+	#check for too many arguments
+	if [[ ! -z "$null" ]]; then
+		printf "Error: subfactorial can only accept one argument.\nTry -h or --help falgs for usage.\n\n" >&2
+		return 1
+	fi
+
+	#check for null entry, and ensure entry contains only integers 0-9
+	if [[ ! "$n" =~ ^[0-9]+$ || -z "$n" ]]; then
+		printf "Error: subfactorial entry must be a non-negative integer\n" >&2
+		return 1
+	fi
+
+
+###################################################################################################################
+
+# This is a recursive definition without passing to bc. Redefined and implemented below
+
+#	if (( n == 0 )); then
+#		echo "1"
+#		return 0
+#	fi
+#
+#	if (( n == 1 )); then
+#		echo "0"
+#		return 0
+#	fi
+#
+#	local n1=$( subfactorial $(( n - 1 )) )
+#	local n2=$( subfactorial $(( n - 2 )) )
+#
+#	local solution=$(( ( n - 1 )*( n1 + n2 ) ))
+#
+#	echo "$solution"
+
+###################################################################################################################
+
+
+	#define subfactorial recursively, then pass result to bc to handle large numbers, first handle 0 and 1 cases
+	local solution=$( echo "scale=0;
+				define subf(x){
+						if (x == 0) return(1);
+						if (x == 1) return(0);
+						return (x - 1) * (subf(x - 1) + subf(x - 2));
+												}
+													subf($n)" |bc )
+
+	#check to make sure nothing went wrong
+	if [[ -z "$solution" || "$solution" == "?" ]]; then
+		printf "Error: could not compute\n" >&2
+		return 1
+	fi
+
+	echo "$solution"
+
+}
+
+subfactorial $1 $2

@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# permute n r
+# this program is very similar to nchoosek, however it uses the permutation formula to find the number of
+# permutations possible of a subset of n. The main difference between permute and nchoosek, aside from the
+# mathematical definitions, is that in this script I chose to write a separate function for factorial instead
+# of writing an inline recursive function to define its behavior. This should be more robust and useable in the future.
+
+
+# nPr = n!/(n-r)!
+# n := total number of objects in a set
+# r := number of indices to permute from the set
+
+
+# define permute
+# again, pay attention to variable expansions($).
+permute() {
+
+local n=$1
+local r=$2
+
+#define help flag
+	if [[ $1 == "-h" || $1 == "--help" ]]; then
+		printf "This script computes the number of permutations of a selected number of elements(r) from a set(n)\n Usage: permute [n] [r]\n"
+		exit 0
+	fi
+
+# if n or r are null entries (user failed to enter arguments)
+	if [[ -z "$n" || -z "$r" ]]; then
+		printf "Error: argument entries must be non zero\n" >&2
+		return 1
+	fi
+
+# if n and r are entries that consists of anything other than integers 0-9, throw error
+# there is a thorough breakdown of this kind of regex check in nchoosek.
+	if [[ ! "$n" =~ ^[0-9]+$ || ! "$r" =~ ^[0-9]+$ ]]; then
+		printf "Error: entries must be non-negative integers\n" >&2
+		return 1
+	fi
+
+
+# if r is not less than n
+	if (( r > n )); then
+		printf "Error: subset must be less than total number of elements\n" >&2
+		return 1
+	fi
+
+
+# note here that single parentheses are for command output, while double is for arithmetic and logic operators with integers.
+local fn=$( factorial $n )
+local fnminusr=$( factorial $(( n-r )) )
+local P=$( echo "$fn / $fnminusr" | bc )
+
+# check to make sure nothing went wrong
+	if [[ -z "$P" || "$P" == "?" || (( P < 1 ))  ]]; then
+		printf "Error: failed to compute\n" >&2
+		return 1
+	fi
+
+echo "$P"
+}
+
+permute $1 $2

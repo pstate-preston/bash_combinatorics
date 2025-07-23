@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# factorial n
+# function to cleanly compute factorials of large numbers so I can use factorial function in other scripts
+# including a --help and -h to describe use
+
+factorial() {
+
+	#help flag
+	if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+		echo "Usage: factorial [non-negative integer]"
+	exit 0
+	fi
+
+	#check for null entry
+	if [[ -z "$1" ]]; then
+		printf "Error: factorial must contain at least one argument.\nTry -h or --help flags for usage.\n\n" >&2
+		return 1
+	fi
+
+	#check for more than one argument
+	if [[ ! -z "$2" ]]; then
+		printf "Error: factorial can only accept one argument\nTry -h or --help flags for usage.\n\n" >&2
+		return 1
+	fi
+
+	#check user errors. entry must consist of characters between 0-9 (regex check), and there must be an entry.
+	if [[ ! "$1" =~ ^[0-9]+$ ]]; then
+		printf "Error: factorial entry must be a non-negative integer\n"
+		return 1
+	fi
+
+
+	#define factorial as a recursive function, then pass the result to bc to handle large numbers
+	local solution=$(echo "scale=0;
+			       define f(x){
+						if ( x<=1 ) return(1);
+						return (x * f(x - 1));
+									}
+										f($1)" | bc)
+
+	#check that nothing went wrong, then output solution
+	if [[ -z "$solution" || "$solution" == "?" ]]; then
+		printf "Error: failed to compute factorial" >&2
+		return 1
+	fi
+
+	echo "$solution"
+}
+
+factorial $1 $2

@@ -1,0 +1,86 @@
+#!/bin/bash
+
+####################################################################
+#NOTE: created a function script- factorial, to call from inside any script.
+# restructured this code to use the factorial script, instead of defining it here.
+# added --help and -h flags to demonstrate script use
+####################################################################
+
+# nchoosek n k
+# This is a function that takes two numbers (n k) and determines the total number of combinations for k elements
+# being chosen from a set of cardinality n (n would be items, k is spaces on a shelf to arrange those items).
+# This is done using the factorial notation for a binomial coefficent.
+
+
+# for each statement, return 1 indicates that if the condition is met, the function has completed running. If return 0 were used,
+# the function would continue to run after checking the condition.
+
+# >&2 reports the printed message as a standard error, not a standard output. This is recorded in the standard
+# error log on the machine.
+
+# $1 and $2 are automatically stored as the two function's inputs in an executable bash file.
+
+# don't include spaces around equal signs! remember, this is a script that runs in the terminal.
+
+nchoosek() {
+
+#quotes are not necessary, just a bugproof way to ensure the entire argument is being processed.
+	local n="$1"
+	local k="$2"
+
+
+#define help flag
+	if [[ $1 == "-h" || $1 == "--help" ]]; then
+		printf "This function computes the number of combinations possible of a chosen number of elements(k) from a set of elements(n)\n Usage: nchoosek [n] [k]\n"
+		exit 0
+	fi
+
+#function can only take non-negative integers. this below ensures that no letters or symbols at all are accepted- only digits 0 through 9.
+#this is common in bash scripting. interesting becuse it seems to often use text formatting and editors to check variable types/parameters
+# =~ is the regex match operator. regex refers to a sequence of characters that defines a search pattern for text, like in grep. Regex stands for -regular expression-
+# ^ represents the start of the string
+# [0-9] defines the characters that can be accepted
+# + indicates that one or more of these characters can be accepted
+# $ ends the string
+	if [[ ! $n =~ ^[0-9]+$ || ! $k =~ ^[0-9]+$ ]]; then
+		printf "Error: entries must be non-negative integers\n" >&2
+		return 1
+	fi
+
+#function needs two arguments, must be entered in the format nchoosek n k
+	if [[ -z "$n" || -z "$k" ]]; then
+		printf "Error: function needs two arguments\n" >&2
+		return 1
+	fi
+
+#number of elements chosen must be less than or equal to number of total elements
+	if (( n < k )); then
+		printf "Error: choice of combinational elements(k) must be less than or equal to total number of elements(n)\n" >&2
+		return 1
+	fi
+
+#initiate solution
+# scale=0 ensures bc rounds to nearest integer
+# factorial is defined in its own script
+# we are simply piping the computation of the binomial coefficient formula to bc for handling larger numbers
+	local fn=$(factorial $n)
+	local fk=$(factorial $k)
+	local fnminusk=$(factorial $(( n-k )))
+	local C=$(echo "scale=0;
+				$fn/($fk*$fnminusk)" | bc)
+
+
+#if something goes wrong and the value of c is null, or bc returns ?
+	if [[ -z "$C" || "$C" == "?" ]]; then
+		printf "Error: failed to compute\n" >&2
+		return 1
+	fi
+
+#formats as string(%s) and prints solution
+	printf "%s\n" "$C"
+}
+
+#now that the function is defined in the script, it must be set up properly and called.
+#remember, this is just a script being executed and not a function itself
+#also, note that $1 and $2 below are the global entries of the script being passed into the function created above.
+nchoosek "$1" "$2"

@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# multichoose n k
+# see notes/multichoose_notes for more details
+
+# Multichoose(n,k) = (n+k-1)_C_(k) = (n+k-1)!/(n-1)!
+# n := total number of elements in a set
+# k := total number of elements to choose from with possible repeating choices
+
+multichoose() {
+
+	local n=$1
+	local k=$2
+	local null=$3
+
+#Define help flag
+	if [[ "$n" == "-h" || "$n" == "--help" ]]; then
+		printf "This function computes the number of combinations of a chosen number of elements(k) from a set(n), allowing for repeated choices.\n Usage: multichoose [n] [k]\n"
+		exit 0
+	fi
+
+#Check to see if entries are null
+	if [[ -z $n || -z $k ]]; then
+		printf "Error: function needs two arguments\nTry including -h or --h flags for usage\n\n" >&2
+		return 1
+	fi
+
+#Check for more than two arguments
+	if [[ ! -z "$null" ]]; then
+		printf "Error: only two arguments are accepted.\nTry including -h or --help for usage\n\n" >&2
+		return 1
+	fi
+
+#Regex check (are entries of non-zero integers 0-9?)
+	if [[ ! "$n" =~ ^[0-9]+$ || ! "$k" =~ ^[0-9]+$ ]]; then
+		printf "Error: entries must be non-negative integers\n\n" >&2
+		return 1
+	fi
+
+#k must be less than n.
+	if (( k > n )); then
+		printf "Error: total elements(n) must be greater than chosen number of combinational elements(k)\n\n" >&2
+		return 1
+	fi
+
+#Compute solution (M) using: nchoosek (n+k-1) (n-1)
+#Shouldn't need to pass anything to bc, since factorial and nchoosek scripts already use bc to handle their numbers
+	local fnum=$(( n+k-1 ))
+	local fden=$(( n-1 ))
+	local M=$( nchoosek $fnum $fden )
+
+#Check to make sure nothing went wrong, output solution
+	if [[ -z "$M" || "$M" == "?" ]]; then
+		printf "Error: failed to compute solution\n\n" >&2
+		return 1
+	fi
+
+	echo "$M"
+}
+
+multichoose $1 $2 $3

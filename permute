@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# permute n r
+# see notes/permute_notes for more details
+
+# nPr = n!/(n-r)!
+# n := total number of objects in a set
+# r := number of indices to permute from the set
+
+
+permute() {
+
+	local n=$1
+	local r=$2
+	local null=$3
+
+#define help flag
+	if [[ $1 == "-h" || $1 == "--help" ]]; then
+		printf "This script computes the number of permutations of a selected number of elements(r) from a set(n)\n Usage: permute [n] [r]\n\n"
+		exit 0
+	fi
+
+# if n or r are null entries (user failed to enter arguments)
+	if [[ -z "$n" || -z "$r" ]]; then
+		printf "Error: Function needs two arguments\nTry including -h or --help flags for usage\n\n" >&2
+		return 1
+	fi
+
+#check to make sure only one argument was input
+	if [[ ! -z "$null" ]]; then
+		printf "Error: can only accept two arguments.\nTry including -h or --help flags for usage\n\n" >&2
+		return 1
+	fi
+
+# if n and r are entries that consists of anything other than integers 0-9, throw error
+	if [[ ! "$n" =~ ^[0-9]+$ || ! "$r" =~ ^[0-9]+$ ]]; then
+		printf "Error: entries must be non-negative integers\n\n" >&2
+		return 1
+	fi
+
+# if r is not less than n
+	if (( n < r )); then
+		printf "Error: subset must be less than total number of elements\n\n" >&2
+		return 1
+	fi
+
+# compute solution(P)
+	local fn=$( factorial $n )
+	local fnminusr=$( factorial $(( n-r )) )
+	local P=$( echo "$fn / $fnminusr" | bc )
+
+# check to make sure nothing went wrong, then output solution
+	if [[ -z "$P" || "$P" == "?" || (( P < 1 ))  ]]; then
+		printf "Error: failed to compute\n\n" >&2
+		return 1
+	fi
+
+	echo "$P"
+}
+
+permute $1 $2 $3
